@@ -76,15 +76,15 @@ object Tables {
 
   class EventNodesTable(tag: Tag) extends Table[EventNodeRow](tag, "event_nodes") {
     def id = column[UUID]("event_node_id", O.PrimaryKey)
-    def siteDisplayLabel = column[LocalizedText]("site_display_label")
-    def start = column[Instant]("event_node_start_dttm_utc")
-    def end = column[Instant]("event_node_end_dttm_utc")
-    def expectedCapacity = column[BigDecimal]("expected_capacity_value")
-    def deleted = column[Boolean]("deleted")
-    def organizationName = column[LocalizedText]("organization_name")
-    def requestedTargets = column[Seq[RequestedTarget]]("requested_targets")
-    def createdAt = column[Instant]("created_dttm")
-    def updatedAt = column[Instant]("last_updated_dttm")
+    def siteDisplayLabel = column[LocalizedText]("site_display_label", O.SqlType("TEXT"))
+    def start = column[Instant]("event_node_start_dttm_utc", O.SqlType("TIMESTAMPTZ"))
+    def end = column[Instant]("event_node_end_dttm_utc", O.SqlType("TIMESTAMPTZ"))
+    def expectedCapacity = column[BigDecimal]("expected_capacity_value", O.SqlType("NUMERIC(18,4)"))
+    def deleted = column[Boolean]("deleted", O.SqlType("BOOLEAN"))
+    def organizationName = column[LocalizedText]("organization_name", O.SqlType("TEXT"))
+    def requestedTargets = column[Seq[RequestedTarget]]("requested_targets", O.SqlType("JSONB"))
+    def createdAt = column[Instant]("created_dttm", O.SqlType("TIMESTAMPTZ"))
+    def updatedAt = column[Instant]("last_updated_dttm", O.SqlType("TIMESTAMPTZ"))
 
     override def * = (id, siteDisplayLabel, start, end, expectedCapacity, deleted, organizationName, requestedTargets, createdAt, updatedAt).mapTo[EventNodeRow]
   }

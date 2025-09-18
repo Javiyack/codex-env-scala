@@ -53,11 +53,19 @@ operadores nativos de PostgreSQL sobre `jsonb`.
    - Las fechas se manejan como `Instant` en ISO-8601. Cualquier error de `parse` devuelve un `DecodingFailure` con el
      mensaje específico.
 
-## Scripts de migración
+## Migraciones con Slick
 
-El archivo [`src/main/resources/db/migration/V1__create_event_node_tables.sql`](../src/main/resources/db/migration/V1__create_event_node_tables.sql)
-crea la tabla `event_nodes` con todas las columnas, incluida `requested_targets` de tipo `JSONB`. Puede utilizarse con
-herramientas como Flyway o ejecutarse manualmente.
+Las migraciones se describen en Scala empleando [`slick-migration-api`](https://github.com/nafg/slick-migration-api) y el
+`PostgresDialect`. El objeto
+[`EventNodeMigrations`](../src/main/scala/com/example/eventnode/db/migration/EventNodeMigrations.scala)
+construye las sentencias a partir de las definiciones de tabla de Slick (`Tables.EventNodesTable`). Al ejecutarlas mediante
+`migrateSchema()` en el servicio se crea la tabla `event_nodes` con los tipos:
+
+- `requested_targets` → `JSONB`.
+- columnas temporales → `TIMESTAMPTZ`.
+- `expected_capacity_value` → `NUMERIC(18,4)`.
+
+Esto garantiza que cualquier cambio futuro en el esquema pueda versionarse en código junto con el modelo de dominio.
 
 ## Flujo de datos
 

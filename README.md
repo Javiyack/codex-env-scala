@@ -6,7 +6,7 @@ Incluye:
 - Modelos de dominio en Scala 2.13.
 - Encoders/decoders implícitos de Circe que mantienen la forma exacta del JSON original.
 - Tablas y repositorios Slick para PostgreSQL.
-- Script SQL de migración (`V1__create_event_node_tables.sql`).
+- Migraciones programáticas en Scala usando `slick-migration-api` y el `PostgresDialect` (`EventNodeMigrations`).
 - Documentación detallada en [`docs/modeling.md`](docs/modeling.md) sobre las elecciones de tipos y la estrategia de
   serialización.
 
@@ -22,5 +22,6 @@ estructura se mantiene consistente.
 ## Conexión a base de datos
 
 La clase [`EventNodeService`](src/main/scala/com/example/eventnode/service/EventNodeService.scala) expone operaciones
-asincrónicas para crear, actualizar y consultar registros. Puede inicializarse con un `Database` configurado mediante
-HikariCP o `Database.forConfig`.
+asincrónicas para crear, actualizar y consultar registros, y ahora incluye el método `migrateSchema()` que ejecuta las
+migraciones definidas en [`EventNodeMigrations`](src/main/scala/com/example/eventnode/db/migration/EventNodeMigrations.scala).
+Puede inicializarse con un `Database` configurado mediante HikariCP o `Database.forConfig`.

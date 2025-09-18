@@ -10,6 +10,7 @@ lazy val root = (project in file("."))
       "org.postgresql" % "postgresql" % "42.7.3",
       "io.circe" %% "circe-core" % "0.14.6",
       "io.circe" %% "circe-generic" % "0.14.6",
-      "io.circe" %% "circe-parser" % "0.14.6"
+      "io.circe" %% "circe-parser" % "0.14.6",
+      "io.github.nafg" %% "slick-migration-api" % "0.9.0"
     )
   )
