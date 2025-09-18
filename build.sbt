@@ -1,6 +1,9 @@
 ThisBuild / scalaVersion := "2.13.12"
 
+lazy val Migrations = config("migrations") extend Compile
+
 lazy val root = (project in file("."))
+  .configs(Migrations)
   .settings(
     name := "event-node-app",
     version := "0.1.0",
@@ -14,3 +17,4 @@ lazy val root = (project in file("."))
       "io.github.nafg" %% "slick-migration-api" % "0.9.0"
     )
   )
+  .settings(inConfig(Migrations)(Defaults.configSettings): _*)
