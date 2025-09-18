@@ -1,6 +1,7 @@
 package com.example.eventnode.db
 
 import com.example.eventnode.domain.{EventNode, LocalizedText, RequestedTarget}
+import com.example.eventnode.json.EventNodeJson._
 import io.circe.parser.parse
 import io.circe.syntax._
 import slick.jdbc.PostgresProfile.api._
@@ -24,6 +25,14 @@ object Tables {
         .fold(error => throw new IllegalArgumentException(s"Invalid LocalizedText JSON: ${error.message}"), LocalizedText.apply)
   )
 
+  implicit val requestedTargetsColumnType: BaseColumnType[Seq[RequestedTarget]] = MappedColumnType.base[Seq[RequestedTarget], String](
+    targets => targets.asJson.noSpaces,
+    json =>
+      parse(json)
+        .flatMap(_.as[Seq[RequestedTarget]])
+        .fold(error => throw new IllegalArgumentException(s"Invalid RequestedTarget JSON: ${error.message}"), identity)
+  )
+
   final case class EventNodeRow(
     id: UUID,
     siteDisplayLabel: LocalizedText,
@@ -32,10 +41,11 @@ object Tables {
     expectedCapacity: BigDecimal,
     deleted: Boolean,
     organizationName: LocalizedText,
+    requestedTargets: Seq[RequestedTarget],
     createdAt: Instant,
     updatedAt: Instant
   ) {
-    def toDomain(targets: Seq[RequestedTargetRow]): EventNode = EventNode(
+    def toDomain: EventNode = EventNode(
       id = id,
       siteDisplayLabel = siteDisplayLabel,
       start = start,
@@ -43,7 +53,7 @@ object Tables {
       expectedCapacity = expectedCapacity,
       deleted = deleted,
       organizationName = organizationName,
-      requestedTargets = targets.map(_.toDomain).sortBy(_.start),
+      requestedTargets = requestedTargets.sortBy(_.start),
       createdAt = createdAt,
       updatedAt = updatedAt
     )
@@ -58,26 +68,9 @@ object Tables {
       expectedCapacity = domain.expectedCapacity,
       deleted = domain.deleted,
       organizationName = domain.organizationName,
+      requestedTargets = domain.requestedTargets,
       createdAt = domain.createdAt,
       updatedAt = domain.updatedAt
-    )
-  }
-
-  final case class RequestedTargetRow(
-    eventNodeId: UUID,
-    start: Instant,
-    end: Instant,
-    targetValue: BigDecimal
-  ) {
-    def toDomain: RequestedTarget = RequestedTarget(start, end, targetValue)
-  }
-
-  object RequestedTargetRow {
-    def fromDomain(eventNodeId: UUID, target: RequestedTarget): RequestedTargetRow = RequestedTargetRow(
-      eventNodeId = eventNodeId,
-      start = target.start,
-      end = target.end,
-      targetValue = target.targetValue
     )
   }
 
@@ -89,24 +82,12 @@ object Tables {
     def expectedCapacity = column[BigDecimal]("expected_capacity_value")
     def deleted = column[Boolean]("deleted")
     def organizationName = column[LocalizedText]("organization_name")
+    def requestedTargets = column[Seq[RequestedTarget]]("requested_targets")
     def createdAt = column[Instant]("created_dttm")
     def updatedAt = column[Instant]("last_updated_dttm")
 
-    override def * = (id, siteDisplayLabel, start, end, expectedCapacity, deleted, organizationName, createdAt, updatedAt).mapTo[EventNodeRow]
-  }
-
-  class RequestedTargetsTable(tag: Tag) extends Table[RequestedTargetRow](tag, "requested_targets") {
-    def eventNodeId = column[UUID]("event_node_id")
-    def start = column[Instant]("start_dttm")
-    def end = column[Instant]("end_dttm")
-    def targetValue = column[BigDecimal]("target_value")
-
-    def pk = primaryKey("requested_targets_pkey", (eventNodeId, start))
-    def eventNodeFk = foreignKey("requested_targets_event_node_id_fkey", eventNodeId, eventNodes)(_.id, onDelete = ForeignKeyAction.Cascade)
-
-    override def * = (eventNodeId, start, end, targetValue).mapTo[RequestedTargetRow]
+    override def * = (id, siteDisplayLabel, start, end, expectedCapacity, deleted, organizationName, requestedTargets, createdAt, updatedAt).mapTo[EventNodeRow]
   }
 
   val eventNodes = TableQuery[EventNodesTable]
-  val requestedTargets = TableQuery[RequestedTargetsTable]
 }
