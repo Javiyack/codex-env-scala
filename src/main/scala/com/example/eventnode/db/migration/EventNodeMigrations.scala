@@ -1,44 +1,28 @@
 package com.example.eventnode.db.migration
 
 import com.example.eventnode.db.Tables
-import slick.jdbc.PostgresProfile
 import slick.jdbc.PostgresProfile.api._
-import slick.migration.api.{Dialect, Migration, MigrationSeq, PostgresDialect, TableMigration}
+import slick.migration.api.PostgresDialect
 
+import scala.annotation.unused
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
-  * Define y ejecuta las migraciones de base de datos empleando slick-migration-api
-  * y el dialecto de PostgreSQL. Permite generar las sentencias SQL de creación
-  * de esquema directamente desde las definiciones de tabla de Slick para mantener
-  * consistencia entre el dominio y la base de datos.
+  * Define y ejecuta las migraciones de base de datos utilizando la función `.schema`
+  * de Slick para mantener la definición de la tabla sincronizada con el modelo.
   */
 object EventNodeMigrations {
 
-  implicit val postgresDialect: Dialect[PostgresProfile] = PostgresDialect
+  @unused implicit val postgresDialect: PostgresDialect = new PostgresDialect
 
-  val createEventNodesTable: Migration =
-    TableMigration(Tables.eventNodes.baseTableRow)
-      .create
-      .addColumns(
-        _.id,
-        _.siteDisplayLabel,
-        _.start,
-        _.end,
-        _.expectedCapacity,
-        _.deleted,
-        _.organizationName,
-        _.requestedTargets,
-        _.createdAt,
-        _.updatedAt
-      )
+  private val eventNodesSchema = Tables.eventNodes.schema
 
-  val all: MigrationSeq = MigrationSeq(createEventNodesTable)
+  private val schemaMigrations: List[SchemaDescription] = List(eventNodesSchema)
 
-  def schemaStatements: Seq[String] = all.statements.toSeq
-
-  def schema: DBIO[Unit] = DBIO.sequence(schemaStatements.map(stmt => sqlu"#$stmt")).map(_ => ())
+  def schemaStatements: Seq[String] = eventNodesSchema.createStatements.toSeq
 
   def migrate(db: Database)(implicit ec: ExecutionContext): Future[Unit] =
-    db.run(schema)
+    schemaMigrations.foldLeft(Future.successful(())) { (acc, schema) =>
+      acc.flatMap(_ => db.run(schema.createIfNotExists))
+    }
 }

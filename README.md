@@ -6,7 +6,7 @@ Incluye:
 - Modelos de dominio en Scala 2.13.
 - Encoders/decoders implícitos de Circe que mantienen la forma exacta del JSON original.
 - Tablas y repositorios Slick para PostgreSQL.
-- Migraciones programáticas en Scala usando `slick-migration-api` y el `PostgresDialect` (`EventNodeMigrations`).
+- Migraciones programáticas usando la API `.schema` de Slick junto con el `PostgresDialect` (`EventNodeMigrations`).
 - Documentación detallada en [`docs/modeling.md`](docs/modeling.md) sobre las elecciones de tipos y la estrategia de
   serialización.
 
